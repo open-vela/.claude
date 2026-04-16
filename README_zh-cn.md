@@ -15,6 +15,7 @@
 | [pcm-audio](skills/pcm-audio/) | 分析 PCM 音频质量问题 — 削波、静音、爆音、底噪、周期性失真 |
 | [skill-creator](skills/skill-creator/) | 创建新技能的指南，扩展 AI 助手能力 |
 | [tmux](skills/tmux/) | 远程控制 tmux 会话，用于交互式 CLI（python、gdb 等） |
+| [openvela-quickstart](skills/openvela-quickstart/) | openvela 开发环境一键搭建 — 环境检测、依赖安装、智能选源、编译运行模拟器 |
 
 ## 快速开始
 

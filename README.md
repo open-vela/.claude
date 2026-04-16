@@ -15,6 +15,7 @@ AI-powered development skills for [openvela](https://github.com/open-vela) (Nutt
 | [pcm-audio](skills/pcm-audio/) | Analyze PCM audio quality issues — clipping, silence, clicks, noise floor, periodic distortion |
 | [skill-creator](skills/skill-creator/) | Guide for creating new skills that extend AI assistant capabilities |
 | [tmux](skills/tmux/) | Remote control tmux sessions for interactive CLIs (python, gdb, etc.) |
+| [openvela-quickstart](skills/openvela-quickstart/) | Set up openvela dev environment from scratch — detect env, install deps, smart source selection, build & run emulator |
 
 ## Quick Start
 
