@@ -4,10 +4,25 @@
 
 AI-powered development skills for [openvela](https://github.com/open-vela) (NuttX-based RTOS). Each skill teaches the AI assistant domain-specific knowledge about embedded system development, debugging, and optimization.
 
+## New to openvela?
+
+Set up your development environment in minutes with AI assistance:
+
+```bash
+git clone https://github.com/open-vela/.claude.git .claude
+```
+
+Then tell your AI assistant:
+
+> Help me set up the openvela development environment
+
+The `openvela-quickstart` skill will automatically handle environment detection, dependency installation, repository initialization, build, and emulator launch.
+
 ## Skills
 
 | Skill | Description |
 |-------|-------------|
+| [openvela-quickstart](skills/openvela-quickstart/) | Set up openvela development environment from scratch — environment detection, dependency installation, repo init, build, and emulator launch |
 | [codesize](skills/codesize/) | Analyze firmware binary size across multi-core/multi-architecture (ARM/Xtensa/RISC-V) targets |
 | [executor](skills/executor/) | Manage persistent interactive CLI processes (REPLs, debuggers, QEMU, NuttX simulator) |
 | [kconfig-tweak](skills/kconfig-tweak/) | Modify NuttX/Linux .config files from command line without interactive menuconfig |
@@ -21,7 +36,7 @@ AI-powered development skills for [openvela](https://github.com/open-vela) (Nutt
 Clone this repository into your openvela project root as `.claude/`:
 
 ```bash
-git clone https://github.com/open-vela/ai-skills.git .claude
+git clone https://github.com/open-vela/.claude.git .claude
 ```
 
 The AI assistant will automatically discover and use these skills when relevant tasks are requested.
