@@ -1,0 +1,38 @@
+#!/bin/bash
+# Unified pre-commit hook for API documentation quality.
+# Runs two checks:
+#   1. Header-doc sync: ensures API docs are updated when headers change
+#   2. Translation quality: detects mixed Chinese-English patterns in zh-cn docs
+#
+# Install:
+#   cp .claude/skills/api-doc-check/scripts/pre-commit .git/hooks/pre-commit
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# When running as a git hook, scripts are in .git/hooks/
+# We need to find the actual script locations
+if [[ -f "$SCRIPT_DIR/../../.claude/skills/api-doc-check/scripts/check-api-doc-sync.sh" ]]; then
+    BASE_DIR="$SCRIPT_DIR/../.."
+elif [[ -f "$SCRIPT_DIR/check-api-doc-sync.sh" ]]; then
+    BASE_DIR="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+else
+    # Fallback: assume we're in the repo root
+    BASE_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+fi
+
+SYNC_SCRIPT="$BASE_DIR/.claude/skills/api-doc-check/scripts/check-api-doc-sync.sh"
+TRANS_SCRIPT="$BASE_DIR/.claude/skills/api-doc-check/scripts/check-zh-translation.sh"
+
+exit_code=0
+
+# Check 1: Header-doc sync
+if [[ -f "$SYNC_SCRIPT" ]]; then
+    bash "$SYNC_SCRIPT" || exit_code=1
+fi
+
+# Check 2: Translation quality
+if [[ -f "$TRANS_SCRIPT" ]]; then
+    bash "$TRANS_SCRIPT" || exit_code=1
+fi
+
+exit $exit_code

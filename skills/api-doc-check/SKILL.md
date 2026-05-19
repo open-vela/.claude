@@ -8,11 +8,14 @@ description: Checks API documentation coverage and sync status against source he
 ## ⚡ TL;DR 快速入门
 
 ```bash
-# 检查所有模块的 API 文档覆盖率
+# 检查头文件变更时文档是否同步
 bash .claude/skills/api-doc-check/scripts/check-api-doc-sync.sh
 
-# 作为 pre-commit hook 安装
-cp .claude/skills/api-doc-check/scripts/check-api-doc-sync.sh .git/hooks/pre-commit
+# 检查本次变更的 API 文档翻译质量（中文检查中英混杂，英文检查混入中文）
+bash .claude/skills/api-doc-check/scripts/check-zh-translation.sh
+
+# 作为 pre-commit hook 安装（两项检查都会执行）
+cp .claude/skills/api-doc-check/scripts/pre-commit .git/hooks/pre-commit
 ```
 
 ---
@@ -28,6 +31,7 @@ cp .claude/skills/api-doc-check/scripts/check-api-doc-sync.sh .git/hooks/pre-com
 | ✅ 头文件-文档映射 | 维护 50+ 个头文件到文档的对应关系    |
 | ✅ 变更检测        | 检测 git staged 中的头文件变更       |
 | ✅ 同步校验        | 验证头文件变更时对应文档是否也有更新 |
+| ✅ 翻译质量检查    | 检测中英文文档的翻译质量问题         |
 | ✅ pre-commit 集成 | 可作为 git hook 阻止不同步的提交     |
 
 ### 适用场景
@@ -59,8 +63,12 @@ cp .claude/skills/api-doc-check/scripts/check-api-doc-sync.sh .git/hooks/pre-com
 ### 作为 pre-commit hook
 
 ```bash
-cp .claude/skills/api-doc-check/scripts/check-api-doc-sync.sh .git/hooks/pre-commit
+cp .claude/skills/api-doc-check/scripts/pre-commit .git/hooks/pre-commit
 ```
+
+这会同时执行两项检查：
+1. 头文件变更 → 文档同步检查
+2. API 文档 → 翻译质量检查（中文检查中英混杂，英文检查混入中文）
 
 ### 跳过检查
 
