@@ -166,20 +166,28 @@ contest-snapshot --all --confirm
 
 ### 3.3 补回历史对话 (--backfill)
 
-如果你在**安装 hook 之前**就开始用 Claude Code 开发了,那些历史对话仍保存在本机(`~/.claude/projects/`)。用以下命令一键补回:
+如果你在**安装 hook 之前**就开始用 AI 工具开发了,历史对话仍保存在本机的工具数据里。用以下命令一键补回:
 
 ```bash
-# 在选手仓内执行
+# 在选手仓内执行,补回所有支持工具的历史
 contest-snapshot --backfill
+
+# 只补回单一工具(可选)
+contest-snapshot --backfill --source claude     # Claude Code (~/.claude/projects/)
+contest-snapshot --backfill --source opencode   # OpenCode SQLite
+contest-snapshot --backfill --source mimocode   # MiMo Code SQLite
+contest-snapshot --backfill --source cursor     # Cursor state.vscdb
 ```
 
-命令会自动扫描 Claude Code 的所有历史 transcript,把还没采集过的会话补导进 `logs/`。跑完后:
+命令会自动扫描对应工具的历史数据,把还没采集过的会话补导进 `logs/`。跑完后:
 
 ```bash
 git add logs/ && git commit -s -m "logs: backfill history" && git push
 ```
 
 > 幂等:多次跑不会产生重复。已采集过的会话会自动跳过。
+>
+> **Cursor 特别说明**: Cursor 没有实时 hook,只能靠 backfill 补导。建议 Cursor 用户开发时**每天跑一次** `contest-snapshot --backfill --source cursor` 增量补进 logs。
 
 ---
 
@@ -326,14 +334,22 @@ git add logs/ && git commit -s -m "logs: final batch" && git push
 
 ### Q9: 我用 ChatGPT / Cursor / Cody / 其他工具行不行?
 
-**目前不支持**。本届大赛官方支持的工具是:
+本届大赛官方支持:
 
-- Claude Code(主推,含 AIoT-IDE 内嵌)
-- AIoT-IDE
-- OpenCode
-- Codex
+- Claude Code(主推,含 AIoT-IDE 内嵌) — 实时 hook
+- AIoT-IDE — 实时 hook
+- OpenCode — 实时 hook + SQLite backfill
+- Codex — 实时 hook
+- MiMo Code — 实时 hook + SQLite backfill
+- **Cursor — 仅 SQLite backfill**(见 3.3 章节)
 
-用其他工具产生的对话**不会进 staging**,等同于无效工时。
+ChatGPT / Cody / 其他没列出的工具**不支持**,产生的对话无法进入 staging。
+
+**Cursor 特殊说明**:
+- 只支持 `--backfill --source cursor` 从本机 Cursor SQLite 补导历史,**没有实时 hook**
+- 只解析 Cursor 当前 Composer 格式(2025 年后新版),旧格式(2024 年前 aichat.chatdata / aiService.prompts)不支持
+- 每次 backfill 时,manifest 里会记录 Cursor state.vscdb 的 SHA256 + mtime,便于事后审计
+- 想让日志更完整?配合 Claude Code / OpenCode / MiMoCode 用,它们有实时 hook,不会漏
 
 ### Q10: 我用了 Anthropic API / OpenAI API 直接调,行吗?
 

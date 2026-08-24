@@ -451,6 +451,18 @@ def cmd_backfill(args) -> int:
     if source in ("all", "sqlite", "mimocode"):
         db = Path.home() / ".local" / "share" / "mimocode" / "mimocode.db"
         total += backfill_sqlite_db(db, "mimocode", workspace, dest, team_id, github_login)
+    if source in ("all", "cursor"):
+        cursor_adapter = Path(__file__).resolve().parent.parent / \
+            "adapters" / "cursor"
+        sys.path.insert(0, str(cursor_adapter))
+        try:
+            import backfill_cursor
+            total += backfill_cursor.backfill(dest, team_id, github_login)
+        except ImportError as e:
+            sys.stderr.write(f"[cursor] adapter import failed: {e}\n")
+        finally:
+            if str(cursor_adapter) in sys.path:
+                sys.path.remove(str(cursor_adapter))
 
     print(f"\nBackfill done: {total} session(s) imported.")
     if total > 0:
@@ -480,12 +492,15 @@ def main() -> int:
                         "re-process all transcripts. Recovers sessions that "
                         "were created before the hook was installed.")
     p.add_argument("--source", metavar="SRC", default="all",
-                   choices=["all", "claude", "sqlite", "opencode", "mimocode"],
+                   choices=["all", "claude", "sqlite", "opencode",
+                            "mimocode", "cursor"],
                    help="With --backfill, which source to scan. "
-                        "'all' (default) scans Claude Code + OpenCode + MiMoCode; "
+                        "'all' (default) scans Claude Code + OpenCode + "
+                        "MiMoCode + Cursor; "
                         "'claude' scans only ~/.claude/projects/; "
                         "'sqlite' scans OpenCode + MiMoCode SQLite; "
-                        "'opencode' or 'mimocode' scans just that one.")
+                        "'opencode' / 'mimocode' scans just that one; "
+                        "'cursor' scans Cursor global + workspace state.vscdb.")
     p.add_argument("--force", action="store_true",
                    help="With --backfill, wipe the local staging first so all "
                         "transcripts are re-processed even if they were "
