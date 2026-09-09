@@ -41,7 +41,12 @@
     "tool": {
       "type": "string",
       "description": "Source AI tool.",
-      "enum": ["opencode", "claude-code", "codex", "kiro", "mimocode"]
+      "enum": [        "opencode",
+        "claude-code",
+        "codex",
+        "kiro",
+        "mimocode",
+        "cursor"]
     },
     "ts": {
       "type": "string",
