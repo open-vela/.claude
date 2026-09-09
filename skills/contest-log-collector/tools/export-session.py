@@ -434,6 +434,8 @@ def cmd_backfill(args) -> int:
     if env is None:
         return 2
     team_id, github_login = env
+    if getattr(args, "github_login", None):
+        github_login = args.github_login
 
     workspace = _find_workspace_root(dest) or dest
     print(f"Destination: {dest}/logs/")

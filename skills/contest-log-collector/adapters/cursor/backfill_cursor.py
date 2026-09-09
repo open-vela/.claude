@@ -24,6 +24,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import sqlite3
 import sys
@@ -31,6 +32,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlparse
 
 TOOL_ID = "cursor"
 SCHEMA_VERSION = "1.0"
@@ -166,6 +168,26 @@ def _get_json(conn: sqlite3.Connection, table: str, key: str) -> Any:
         return None
 
 
+def _folder_uri_to_fs_path(folder: str) -> str | None:
+    """Convert a workspace.json folder URI to a filesystem path.
+
+    Handles the three URI shapes Cursor writes:
+      file:///home/u/proj      (Linux)  -> /home/u/proj
+      file:///Users/u/proj     (macOS)  -> /Users/u/proj
+      file:///C%3A/Users/u/proj (Windows, percent-encoded drive)
+                                       -> C:/Users/u/proj
+      file:///C:/Users/u/proj  (Windows, plain drive) -> C:/Users/u/proj
+    Naively stripping 'file://' leaves a leading '/' on Windows drive
+    paths ('/C:/...'), which Path.resolve() then mis-resolves relative
+    to the current drive, breaking the workspace prefix match.
+    """
+    parsed = urlparse(folder)
+    path = unquote(parsed.path) if parsed.scheme == "file" else folder
+    if re.fullmatch(r"/[A-Za-z]:/.*", path):
+        path = path[1:]
+    return path or None
+
+
 def workspace_folder_from_ws_db(ws_db: Path) -> str | None:
     """workspace.json sits next to the workspace state.vscdb and contains
     the actual project fsPath. Prefer it over any path inside the db,
@@ -179,12 +201,19 @@ def workspace_folder_from_ws_db(ws_db: Path) -> str | None:
     except (OSError, json.JSONDecodeError):
         return None
     folder = data.get("folder")
-    if isinstance(folder, str) and folder.startswith("file://"):
-        return folder[len("file://"):]
+    if isinstance(folder, str) and folder:
+        return _folder_uri_to_fs_path(folder)
     return None
 
 
 def _bubble_role(bubble: dict) -> str:
+    # Bubble type semantics come from Cursor's internal KV format as
+    # reverse-engineered by community readers (Contrails parser.go,
+    # kernelbench extract_cursor.py) and confirmed against the
+    # composerHeaders schema: type 1 = user prompt, type 2 = assistant
+    # (server) bubble. Unknown types default to user; if Cursor changes
+    # these constants the role labels will be wrong, so re-verify on
+    # format bumps (_v field in composerData).
     t = bubble.get("type")
     if t == 1:
         return "user"

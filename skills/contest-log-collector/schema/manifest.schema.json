@@ -102,6 +102,18 @@
             "type": "string",
             "enum": ["ok", "degraded", "error"],
             "description": "Session collection health: ok=normal; degraded=partial errors logged in errors/; error=fully failed"
+          },
+          "source_integrity": {
+            "type": "object",
+            "description": "Source database audit snapshot for backfill-sourced sessions (cursor). Records SHA256 + size + mtime of the source state.vscdb (and -wal/-shm if present) at backfill time, so post-hoc audits can detect source mutation.",
+            "properties": {
+              "main_sha256": { "type": "string" },
+              "main_size": { "type": "integer", "minimum": 0 },
+              "main_mtime": { "type": "string" },
+              "wal_sha256": { "type": "string" },
+              "shm_sha256": { "type": "string" },
+              "captured_at": { "type": "string" }
+            }
           }
         }
       }

@@ -14,6 +14,10 @@ WORKSPACE="$TMPDIR_ROOT/demo"
 mkdir -p "$WORKSPACE"
 cd "$WORKSPACE"
 
+# The collector's privacy gate only collects inside an openvela workspace
+# (a directory containing .repo/). Mark the fixture workspace accordingly.
+mkdir -p "$WORKSPACE/.repo"
+
 git init -q -b main >/dev/null
 git config user.name "test"
 git config user.email "test@local"
