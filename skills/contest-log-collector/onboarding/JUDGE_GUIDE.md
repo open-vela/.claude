@@ -43,6 +43,13 @@ python3 tools/validate-log.py logs/
 #               (seq 缺号 / team_id 不一致 / manifest 与文件对不上 等)
 ```
 
+> **关于长会话的已知情况**: 2026-07-10 之前的采集插件版本会把一个跨天会话按日期
+> 拆成多个 JSONL 文件，manifest 只保留一条累计记录。validate-log.py 已按
+> "同 session 多文件聚合" 校验，这类队伍不会误报。另有 `duplicate identical
+> line (plugin re-export artifact)` 形式的 WARNING，是插件早期重导出追加的
+> 字节级重复行，内容一致、非人为篡改，可忽略；只有 `duplicate seq with
+> different content` 才是反作弊 ERROR。
+
 ## 批量生成评分报告 (打分工作流)
 
 ```bash

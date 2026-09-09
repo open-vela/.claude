@@ -5,8 +5,15 @@ contest-log-upload validation tool
 Validate demo repo's logs/ directory:
   1. manifest.json conforms to manifest.schema.json
   2. Each line in every .jsonl file conforms to event.schema.json
-  3. seq within each session is monotonic (tamper detection)
-  4. Files declared in manifest actually exist, and vice versa
+  3. seq within each session is monotonic (tamper detection);
+     a session may span several date files (pre-2026-07 collector
+     versions split one session across daily files) - all files named
+     <tool>__<sid>.jsonl are validated as one continuous seq stream
+     and compared against the manifest's cumulative event_count
+  4. Files declared in manifest actually exist, and vice versa;
+     byte-identical duplicate lines (plugin re-export artifacts) are
+     reported as warnings, only content-conflicting duplicates are
+     anti-cheat errors
   5. team_id / tool consistency across files
 
 Usage:
@@ -99,15 +106,22 @@ def validate_jsonl_file(
     expected_tool: str,
     expected_session_id: str,
     report: Report,
+    seq_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Validate a single .jsonl file. Returns stats {seq_max, ts_min, ts_max, count}."""
+    """Validate a single .jsonl file. Returns stats {ts_min, ts_max, count}.
+
+    seq_state carries the session-level seq ledger (seen seq -> raw line,
+    last seq) so that a session split across several date files is checked
+    as one continuous stream. Pass a fresh dict per session; files of the
+    same session must share the same dict.
+    """
     stats = {
-        "seq_max": -1,
         "ts_min": None,
         "ts_max": None,
         "count": 0,
-        "seq_seen": set(),
     }
+    if seq_state is None:
+        seq_state = {"seen": {}, "last": -1}
     file_label = str(jsonl_path)
 
     if not jsonl_path.exists():
@@ -123,7 +137,6 @@ def validate_jsonl_file(
     if not content.endswith("\n"):
         report.warn(f"{file_label}: file does not end with newline (spec violation)")
 
-    last_seq = -1
     for line_no, line in enumerate(content.splitlines(), start=1):
         if not line.strip():
             report.warn(f"{file_label}:{line_no}: empty line in JSONL")
@@ -164,18 +177,29 @@ def validate_jsonl_file(
 
         if "seq" in event:
             seq = event["seq"]
-            if seq in stats["seq_seen"]:
-                report.err(
-                    f"{file_label}:{line_no}: duplicate seq={seq} (anti-cheat violation)"
-                )
-            stats["seq_seen"].add(seq)
-            if seq <= last_seq:
-                report.err(
-                    f"{file_label}:{line_no}: seq={seq} not monotonically increasing "
-                    f"(previous={last_seq}, anti-cheat violation)"
-                )
-            last_seq = max(last_seq, seq)
-            stats["seq_max"] = max(stats["seq_max"], seq)
+            first_line = seq_state["seen"].get(seq)
+            if first_line is not None:
+                if first_line == line:
+                    # Byte-identical re-append: early collector versions
+                    # re-exported overlapping transcript ranges into the
+                    # same file. Harmless artifact, not tampering.
+                    report.warn(
+                        f"{file_label}:{line_no}: duplicate identical line seq={seq} "
+                        f"(plugin re-export artifact)"
+                    )
+                else:
+                    report.err(
+                        f"{file_label}:{line_no}: duplicate seq={seq} with different "
+                        f"content (anti-cheat violation)"
+                    )
+            else:
+                seq_state["seen"][seq] = line
+                if seq <= seq_state["last"]:
+                    report.err(
+                        f"{file_label}:{line_no}: seq={seq} not monotonically increasing "
+                        f"(previous={seq_state['last']}, anti-cheat violation)"
+                    )
+                seq_state["last"] = max(seq_state["last"], seq)
 
         if "ts" in event:
             ts = event["ts"]
@@ -255,17 +279,38 @@ def _validate_one_member(
             )
             continue
 
-        declared_files.add(jsonl_path.resolve())
+        # Collector versions before 2026-07-10 split one session across
+        # daily date files (logs/<login>/<date>/<tool>__<sid>.jsonl) while
+        # the manifest kept a single entry with the cumulative count and
+        # the last day's file_path. Gather every file of this session so
+        # the whole stream is validated together, the cumulative count is
+        # compared against the aggregate, and sibling files are not
+        # mis-flagged as orphans.
+        session_files = {
+            p for p in member_dir.glob("*/*.jsonl")
+            if p.name == f"{tool}__{sid}.jsonl"
+        }
+        session_files.add(jsonl_path)
+        session_files = sorted(session_files, key=lambda p: (p.parent.name, p.name))
 
-        stats = validate_jsonl_file(
-            jsonl_path, event_validator, team_id, github_login, tool, sid, report
-        )
+        for sf in session_files:
+            declared_files.add(sf.resolve())
+
+        seq_state: dict[str, Any] = {"seen": {}, "last": -1}
+        agg_count = 0
+        for sf in session_files:
+            fstats = validate_jsonl_file(
+                sf, event_validator, team_id, github_login, tool, sid, report,
+                seq_state=seq_state,
+            )
+            agg_count += fstats["count"]
 
         declared_count = session.get("event_count", -1)
-        if declared_count != stats["count"]:
+        if declared_count != agg_count:
             report.err(
                 f"{manifest_path}: session[{idx}] {sid!r}: event_count mismatch: "
-                f"manifest={declared_count}, actual={stats['count']}"
+                f"manifest={declared_count}, actual={agg_count} "
+                f"(aggregated across {len(session_files)} file(s))"
             )
 
     for jsonl_path in member_dir.rglob("*.jsonl"):
