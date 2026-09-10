@@ -9,8 +9,12 @@ on:
   issue_comment:
     types: [created]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# This repository only carries documentation and agent skills, so there is
+# nothing to build. Call the CLA workflow directly instead of the full CI
+# entry point, which would otherwise fan out to the platform build matrix.
 jobs:
-  ci:
-    uses: open-vela/public-actions/.github/workflows/ci.yml@dev
+  cla:
+    # Run automatically for PRs, or when /check-cla is posted.
+    if: github.event_name == 'pull_request_target' || (github.event.issue.pull_request && contains(github.event.comment.body, '/check-cla'))
+    uses: open-vela/public-actions/.github/workflows/cla.yml@dev
     secrets: inherit
