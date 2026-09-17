@@ -177,6 +177,7 @@ contest-snapshot --backfill --source claude     # Claude Code (~/.claude/project
 contest-snapshot --backfill --source opencode   # OpenCode SQLite
 contest-snapshot --backfill --source mimocode   # MiMo Code SQLite
 contest-snapshot --backfill --source cursor     # Cursor state.vscdb
+contest-snapshot --backfill --source copilot   # VS Code Copilot Chat sessions
 ```
 
 命令会自动扫描对应工具的历史数据,把还没采集过的会话补导进 `logs/`。跑完后:
@@ -341,9 +342,16 @@ git add logs/ && git commit -s -m "logs: final batch" && git push
 - OpenCode — 实时 hook + SQLite backfill
 - Codex — 实时 hook
 - MiMo Code — 实时 hook + SQLite backfill
+- **Copilot(VS Code Copilot Chat)— 仅本地文件 backfill**(见 3.3 章节)
 - **Cursor — 仅 SQLite backfill**(见 3.3 章节)
 
 ChatGPT / Cody / 其他没列出的工具**不支持**,产生的对话无法进入 staging。
+
+**Copilot 特殊说明**:
+- VS Code 里的 Copilot Chat 支持 `--backfill --source copilot` 从本机会话文件补导(旧 .json 快照 + 新 .jsonl 变更日志两种格式都支持)
+- github.com 网页版 Copilot Chat 是云端存储(仅保留 28 天),**无法**本地导出,不支持
+- Copilot CLI(终端版)暂不支持,如有需要请反馈
+- VS Code 会话格式是私有实现,未知版本会防御式跳过;如导出数量异常请反馈
 
 **Cursor 特殊说明**:
 - 只支持 `--backfill --source cursor` 从本机 Cursor SQLite 补导历史,**没有实时 hook**
