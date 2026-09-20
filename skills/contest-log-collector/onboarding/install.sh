@@ -209,6 +209,69 @@ with open(path, "w") as f:
 print("✅ ~/.config/mimocode/tui.json (MiMo Code plugin registered)")
 MIMOCODE_TUI_PY
 
+USER_QODER_SETTINGS="${HOME}/.qoder/settings.json"
+if [ "$IS_WINDOWS" = "true" ]; then
+  QODER_HOOK_CMD="\"$PYTHON_BIN\" \"$USER_CONTEST_DIR/snapshot_core.py\" --tool qoder"
+else
+  QODER_HOOK_CMD="bash $USER_CONTEST_DIR/contest-snapshot-qoder.sh"
+fi
+"$PYTHON_BIN" - "$USER_QODER_SETTINGS" "$QODER_HOOK_CMD" <<'QODER_HOOK_PY'
+import json, sys, os
+path, cmd = sys.argv[1], sys.argv[2]
+data = {}
+if os.path.exists(path):
+    with open(path) as f:
+        try:
+            data = json.load(f)
+        except Exception:
+            print(f"⚠️  {path} exists but is not valid JSON; backing up and re-creating")
+            os.rename(path, path + ".contest-backup")
+            data = {}
+hooks = data.setdefault("hooks", {})
+contest_marker = "contest-shared"
+for event in ("SessionEnd", "Stop"):
+    arr = hooks.setdefault(event, [])
+    if any(contest_marker in str(h) for group in arr for h in group.get("hooks", [])):
+        continue
+    arr.append({"hooks": [{"type": "command", "command": cmd, "timeout": 30}]})
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with open(path, "w") as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+print(f"✅ {path} (SessionEnd+Stop registered for Qoder)")
+QODER_HOOK_PY
+
+cat > "$USER_CONTEST_DIR/contest-snapshot-qoder.sh" <<'QODER_GLOBAL_HOOK_EOF'
+#!/usr/bin/env bash
+set -eu
+
+GLOBAL_ENV="$HOME/.claude/contest-collector.env"
+if [ ! -f "$GLOBAL_ENV" ]; then
+  echo "[session-log] hook skipped: $GLOBAL_ENV not found (run install.sh first)" >&2
+  exit 0
+fi
+
+set -a
+. "$GLOBAL_ENV"
+set +a
+
+if [ -z "${TEAM_ID:-}" ]; then
+  echo "[session-log] hook skipped: TEAM_ID is empty in $GLOBAL_ENV" >&2
+  exit 0
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CORE="$SCRIPT_DIR/snapshot_core.py"
+if [ ! -f "$CORE" ]; then
+  echo "[session-log] hook FATAL: snapshot_core.py not found at $CORE" >&2
+  exit 2
+fi
+
+exec python3 "$CORE" --tool qoder
+QODER_GLOBAL_HOOK_EOF
+chmod +x "$USER_CONTEST_DIR/contest-snapshot-qoder.sh"
+sed -i "s|exec python3 |exec \"$PYTHON_BIN\" |" "$USER_CONTEST_DIR/contest-snapshot-qoder.sh" 2>/dev/null || true
+echo "✅ ~/.claude/contest-shared/contest-snapshot-qoder.sh (Qoder global hook)"
+
 USER_SETTINGS="$USER_CLAUDE_DIR/settings.json"
 if [ "$IS_WINDOWS" = "true" ]; then
   GLOBAL_HOOK_CMD="\"$PYTHON_BIN\" \"$USER_CONTEST_DIR/snapshot_core.py\" --tool claude-code"

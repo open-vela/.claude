@@ -178,6 +178,7 @@ contest-snapshot --backfill --source opencode   # OpenCode SQLite
 contest-snapshot --backfill --source mimocode   # MiMo Code SQLite
 contest-snapshot --backfill --source cursor     # Cursor state.vscdb
 contest-snapshot --backfill --source codex     # Codex sessions (CLI/IDE/desktop)
+contest-snapshot --backfill --source qoder     # Qoder CLI + IDE transcripts
 ```
 
 命令会自动扫描对应工具的历史数据,把还没采集过的会话补导进 `logs/`。跑完后:
@@ -341,6 +342,7 @@ git add logs/ && git commit -s -m "logs: final batch" && git push
 - AIoT-IDE — 实时 hook
 - OpenCode — 实时 hook + SQLite backfill
 - Codex(CLI / IDE 扩展 / 桌面 App)— 实时 hook + rollout backfill
+- **Qoder(阿里 Agentic IDE)— 实时 hook + transcript backfill**
 - MiMo Code — 实时 hook + SQLite backfill
 - **Cursor — 仅 SQLite backfill**(见 3.3 章节)
 

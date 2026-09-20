@@ -648,7 +648,8 @@ def load_env_file() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--tool", required=True, choices=["claude-code", "codex"])
+    parser.add_argument("--tool", required=True,
+                        choices=["claude-code", "codex", "qoder"])
     args = parser.parse_args()
 
     load_env_file()
