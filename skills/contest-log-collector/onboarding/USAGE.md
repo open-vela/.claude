@@ -178,6 +178,7 @@ contest-snapshot --backfill --source opencode   # OpenCode SQLite
 contest-snapshot --backfill --source mimocode   # MiMo Code SQLite
 contest-snapshot --backfill --source cursor     # Cursor state.vscdb
 contest-snapshot --backfill --source codex     # Codex sessions (CLI/IDE/desktop)
+contest-snapshot --backfill --source dsh        # DeepSeek Harness (dsh) sessions
 ```
 
 命令会自动扫描对应工具的历史数据,把还没采集过的会话补导进 `logs/`。跑完后:
@@ -342,6 +343,7 @@ git add logs/ && git commit -s -m "logs: final batch" && git push
 - OpenCode — 实时 hook + SQLite backfill
 - Codex(CLI / IDE 扩展 / 桌面 App)— 实时 hook + rollout backfill
 - MiMo Code — 实时 hook + SQLite backfill
+- **DeepSeek Harness(dsh)— 仅本地日志 backfill**(见 3.3 章节)
 - **Cursor — 仅 SQLite backfill**(见 3.3 章节)
 
 ChatGPT / Cody / 其他没列出的工具**不支持**,产生的对话无法进入 staging。
@@ -350,6 +352,14 @@ ChatGPT / Cody / 其他没列出的工具**不支持**,产生的对话无法进�
 - Codex CLI、IDE 扩展、桌面 App 共享同一份本地会话存储(`$CODEX_HOME/sessions/`,默认 `~/.codex/`),`--backfill --source codex` 一次全部覆盖
 - 桌面 App 的 rollout 格式按防御式解析:无法识别的新格式行会被跳过并记 stderr 警告,不会产生坏数据;如导出数量异常请反馈
 - ChatGPT 桌面 App 里的普通 Chat/Work 对话是云端存储,**不在** Codex 支持范围内
+
+**DeepSeek Harness(dsh)说明**:
+- dsh CLI / Web / TUI 共用同一份本地会话存储(`$DSH_HOME/sessions/`,默认 `~/.dsh/`),`--backfill --source dsh` 一次全部覆盖,**没有实时 hook**
+- 会话日志是 `session.v4.jsonl.zstd`(zstd 压缩,可配成明文)。需要本机有 `zstd` 命令,或 `pip install zstandard`;两者都没有时适配器会报错提示,不会写出坏数据
+- 只把**真人输入**记为 `user` 事件;dsh 自己注入的 system-reminder / runtime-context / 后台任务通知等会被剔除,不会算到选手头上
+- 工具调用按「调用 + 结果」两条事件成对写入,带结构化入参、token 用量和 `files_touched`
+- 子 agent(subagent)的会话是独立的 session 文件,会一并导入,并在 manifest 里标注 `parent_session_id` / `origin`
+- 截图等图片内容没有 schema 槽位,会被丢弃并计数;纯图片的用户消息会留一条占位文本
 
 **Cursor 特殊说明**:
 - 只支持 `--backfill --source cursor` 从本机 Cursor SQLite 补导历史,**没有实时 hook**

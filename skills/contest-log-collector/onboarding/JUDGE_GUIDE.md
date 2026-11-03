@@ -67,7 +67,7 @@ done
 
 - `seq`           — session 内单调递增。**缺号或重复即数据可疑**
 - `role`          — user / assistant / tool / system
-- `tool`          — opencode / claude-code / codex / kiro
+- `tool`          — opencode / claude-code / codex / kiro / dsh
 - `text`          — 消息正文 (完整保留,无截断)
 - `thinking`      — AI 思考过程 (工具暴露时)
 - `tool_name` / `tool_call_id` / `input` / `output` — 完整工具调用链 (read / edit / bash 等)

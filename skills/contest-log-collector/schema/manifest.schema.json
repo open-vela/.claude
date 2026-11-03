@@ -59,7 +59,8 @@
         "codex",
         "kiro",
         "mimocode",
-        "cursor"]
+        "cursor",
+        "dsh"]
           },
           "started_at": {
             "type": "string",
@@ -76,12 +77,12 @@
           "file_path": {
             "type": "string",
             "description": "Relative path of form logs/<github_login>/<date>/<tool>__<session_id>.jsonl",
-            "pattern": "^logs/[A-Za-z0-9][A-Za-z0-9-]{0,38}/\\d{4}-\\d{2}-\\d{2}/(opencode|claude-code|codex|kiro|mimocode|cursor)__.+\\.jsonl$"
+            "pattern": "^logs/[A-Za-z0-9][A-Za-z0-9-]{0,38}/\\d{4}-\\d{2}-\\d{2}/(opencode|claude-code|codex|kiro|mimocode|cursor|dsh)__.+\\.jsonl$"
           },
           "collection_mode": {
             "type": "string",
-            "description": "Data collection mode. cli=full CLI capture; vscode_extension=full VS Code extension capture; vscode_extension_partial=partial (e.g. Claude Code main transcript missing); backfill-sqlite=recovered from OpenCode/MiMoCode SQLite; backfill-cursor=recovered from Cursor global+workspace state.vscdb",
-            "enum": ["cli", "vscode_extension", "vscode_extension_partial", "backfill-sqlite", "backfill-cursor"]
+            "description": "Data collection mode. cli=full CLI capture; vscode_extension=full VS Code extension capture; vscode_extension_partial=partial (e.g. Claude Code main transcript missing); backfill-sqlite=recovered from OpenCode/MiMoCode SQLite; backfill-cursor=recovered from Cursor global+workspace state.vscdb; backfill-local-log=recovered from a harness's own on-disk session log (DeepSeek Harness session.v4.jsonl)",
+            "enum": ["cli", "vscode_extension", "vscode_extension_partial", "backfill-sqlite", "backfill-cursor", "backfill-local-log"]
           },
           "data_completeness_warning": {
             "type": "string",
