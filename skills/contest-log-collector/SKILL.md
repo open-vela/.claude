@@ -153,6 +153,7 @@ JSONL 每条事件必含字段:
 | OpenCode | CLI / TUI / VS Code 扩展 | ✅ 完全支持 |
 | MiMo Code | CLI / TUI (基于 OpenCode) | ✅ 完全支持 |
 | Codex | CLI | ✅ 自然语言触发 |
+| DeepSeek Harness (dsh) | CLI / Web / TUI | ✅ 本地会话日志 backfill |
 | Kiro | IDE | ⏸️ 暂未实现 |
 
 ## License

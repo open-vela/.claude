@@ -20,7 +20,7 @@
 | [nuttx-driver-development](skills/nuttx-driver-development/) | 创建/更新/审查 NuttX 设备驱动，覆盖 sensor、char、network、fb/LCD、USB、audio、电源电池、MCAL、I2C/SPI 等子系统 |
 | [driver-code-reviewer](skills/driver-code-reviewer/)         | NuttX/Vela 驱动代码质量审查（59 Pattern + 双轮交叉验证 + 量化评分）                                             |
 | [submit-pr](skills/submit-pr/)                               | 通过 Fork 模式向 openvela 社区（GitHub/Gitee）提交 Pull Request，支持单/多仓库批量提交                          |
-| [contest-log-collector](skills/contest-log-collector/)       | openvela AI 大赛 AI Coding 日志自动归集（OpenCode/Claude Code/Codex/AIoT-IDE 通用，零配置无感采集）              |
+| [contest-log-collector](skills/contest-log-collector/)       | openvela AI 大赛 AI Coding 日志自动归集（OpenCode/Claude Code/Codex/DeepSeek Harness/AIoT-IDE 通用，零配置无感采集） |
 
 ## Agent 列表
 

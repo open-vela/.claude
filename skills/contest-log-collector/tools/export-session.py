@@ -477,6 +477,18 @@ def cmd_backfill(args) -> int:
         finally:
             if str(codex_adapter) in sys.path:
                 sys.path.remove(str(codex_adapter))
+    if source in ("all", "dsh"):
+        dsh_adapter = Path(__file__).resolve().parent.parent / \
+            "adapters" / "dsh"
+        sys.path.insert(0, str(dsh_adapter))
+        try:
+            import backfill_dsh
+            total += backfill_dsh.backfill(dest, team_id, github_login)
+        except ImportError as e:
+            sys.stderr.write(f"[dsh] adapter import failed: {e}\n")
+        finally:
+            if str(dsh_adapter) in sys.path:
+                sys.path.remove(str(dsh_adapter))
 
     print(f"\nBackfill done: {total} session(s) imported.")
     if total > 0:
@@ -507,16 +519,18 @@ def main() -> int:
                         "were created before the hook was installed.")
     p.add_argument("--source", metavar="SRC", default="all",
                    choices=["all", "claude", "sqlite", "opencode",
-                            "mimocode", "cursor", "codex"],
+                            "mimocode", "cursor", "codex", "dsh"],
                    help="With --backfill, which source to scan. "
                         "'all' (default) scans Claude Code + OpenCode + "
-                        "MiMoCode + Cursor + Codex; "
+                        "MiMoCode + Cursor + Codex + DeepSeek Harness; "
                         "'claude' scans only ~/.claude/projects/; "
                         "'sqlite' scans OpenCode + MiMoCode SQLite; "
                         "'opencode' / 'mimocode' scans just that one; "
                         "'cursor' scans Cursor global + workspace state.vscdb; "
                         "'codex' scans $CODEX_HOME/sessions rollout files "
-                        "(covers Codex CLI, IDE extension, and desktop app).")
+                        "(covers Codex CLI, IDE extension, and desktop app); "
+                        "'dsh' scans $DSH_HOME/sessions session logs "
+                        "(DeepSeek Harness CLI / Web / TUI).")
     p.add_argument("--force", action="store_true",
                    help="With --backfill, wipe the local staging first so all "
                         "transcripts are re-processed even if they were "

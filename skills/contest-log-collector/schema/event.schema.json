@@ -46,7 +46,8 @@
         "codex",
         "kiro",
         "mimocode",
-        "cursor"]
+        "cursor",
+        "dsh"]
     },
     "ts": {
       "type": "string",
